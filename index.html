@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Spending Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        #fileInput { margin-bottom: 10px; }
+        #analyzeBtn { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #analyzeBtn:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Financial Spending Analyzer</h1>
+    <input type="file" id="fileInput" accept=".txt,.csv">
+    <button id="analyzeBtn" disabled>Analyze Spending</button>
+    <div id="result"></div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const result = document.getElementById('result');
+
+        fileInput.addEventListener('change', (event) => {
+            analyzeBtn.disabled = !event.target.files.length;
+        });
+
+        analyzeBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const analysis = analyzeSpending(content);
+                displayResult(analysis);
+            };
+
+            reader.readAsText(file);
+        });
+
+        function analyzeSpending(content) {
+            // Split the content into lines
+            const lines = content.split('\n');
+            
+            // Initialize variables for analysis
+            let totalSpending = 0;
+            const categories = {};
+
+            // Process each line
+            lines.forEach(line => {
+                const [category, amountStr] = line.split(',');
+                const amount = parseFloat(amountStr);
+
+                if (!isNaN(amount)) {
+                    totalSpending += amount;
+                    categories[category] = (categories[category] || 0) + amount;
+                }
+            });
+
+            // Calculate percentages
+            const categoryPercentages = {};
+            for (const [category, amount] of Object.entries(categories)) {
+                categoryPercentages[category] = ((amount / totalSpending) * 100).toFixed(2);
+            }
+
+            return {
+                totalSpending: totalSpending.toFixed(2),
+                categories: categoryPercentages
+            };
+        }
+
+        function displayResult(analysis) {
+            let html = `<h2>Spending Analysis</h2>
+                        <p>Total Spending: $${analysis.totalSpending}</p>
+                        <h3>Spending by Category:</h3>
+                        <ul>`;
+
+            for (const [category, percentage] of Object.entries(analysis.categories)) {
+                html += `<li>${category}: ${percentage}%</li>`;
+            }
+
+            html += '</ul>';
+            result.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
